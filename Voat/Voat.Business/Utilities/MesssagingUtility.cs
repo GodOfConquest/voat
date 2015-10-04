@@ -31,6 +31,11 @@ namespace Voat.Utilities
                 return false;
             }
 
+            if (Voat.Utilities.Karma.CommentKarma(System.Web.HttpContext.Current.User.Identity.Name) < 10)
+            {
+                return false;
+            }
+
             List<PrivateMessage> messages = new List<PrivateMessage>();
             MatchCollection col = Regex.Matches(recipientList, @"((?'prefix'@|u/|/u/|v/|/v/)?(?'recipient'[\w-.]+))", RegexOptions.IgnoreCase);
 
@@ -63,7 +68,7 @@ namespace Voat.Utilities
                                     Subject = String.Format("[v/{0}] {1}", recipient, subject),
                                     Body = body,
                                     IsUnread = true,
-                                    MarkedAsUnread = true
+                                    MarkedAsUnread = false
                                 });
                             }
                         }
@@ -84,7 +89,7 @@ namespace Voat.Utilities
                             Subject = subject,
                             Body = body,
                             IsUnread = true,
-                            MarkedAsUnread = true
+                            MarkedAsUnread = false
                         });
                     }
                 }
