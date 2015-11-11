@@ -35,6 +35,9 @@ namespace Voat.Configuration
         public const string CacheDisabled = "cacheDisabled";
         public const string RegistrationDisabled = "registrationDisabled";
         public const string UseContentDeliveryNetwork = "useContentDeliveryNetwork";
+        public const string EmailServiceKey = "emailServiceKey";
+        public const string DestinationPathThumbs = "destinationPathThumbs";
+        public const string DestinationPathAvatars = "destinationPathAvatars";
     }
 
     public class LiveConfigurationManager
@@ -100,11 +103,14 @@ namespace Voat.Configuration
             {
                 SetValueIfPresent<string>(CONFIGURATION.RecaptchaPublicKey, section[CONFIGURATION.RecaptchaPublicKey]);
                 SetValueIfPresent<string>(CONFIGURATION.RecaptchaPrivateKey, section[CONFIGURATION.RecaptchaPrivateKey]);
+                SetValueIfPresent<string>(CONFIGURATION.EmailServiceKey, section[CONFIGURATION.EmailServiceKey]);
                 SetValueIfPresent<string>(CONFIGURATION.SiteName, section[CONFIGURATION.SiteName]);
                 SetValueIfPresent<string>(CONFIGURATION.SiteSlogan, section[CONFIGURATION.SiteSlogan]);
                 SetValueIfPresent<string>(CONFIGURATION.SiteDescription, section[CONFIGURATION.SiteDescription]);
                 SetValueIfPresent<string>(CONFIGURATION.SiteKeywords, section[CONFIGURATION.SiteKeywords]);
                 SetValueIfPresent<string>(CONFIGURATION.SiteLogo, section[CONFIGURATION.SiteLogo]);
+                SetValueIfPresent<string>(CONFIGURATION.DestinationPathAvatars, section[CONFIGURATION.DestinationPathAvatars]);
+                SetValueIfPresent<string>(CONFIGURATION.DestinationPathThumbs, section[CONFIGURATION.DestinationPathThumbs]);
 
                 SetValueIfPresent<int>(CONFIGURATION.MinimumCcp, section[CONFIGURATION.MinimumCcp]);
                 SetValueIfPresent<int>(CONFIGURATION.MaximumOwnedSubs, section[CONFIGURATION.MaximumOwnedSubs]);
@@ -118,7 +124,6 @@ namespace Voat.Configuration
                 SetValueIfPresent<int>(CONFIGURATION.DailyGlobalPostingQuota, section[CONFIGURATION.DailyGlobalPostingQuota]);
                 SetValueIfPresent<int>(CONFIGURATION.DailyCommentPostingQuotaForNegativeScore, section[CONFIGURATION.DailyCommentPostingQuotaForNegativeScore]);
                 SetValueIfPresent<int>(CONFIGURATION.MaxAllowedAccountsFromSingleIP, section[CONFIGURATION.MaxAllowedAccountsFromSingleIP]);
-
 
                 SetValueIfPresent<bool>(CONFIGURATION.ForceHTTPS, section[CONFIGURATION.ForceHTTPS]);
                 SetValueIfPresent<bool>(CONFIGURATION.SiteDisabled, section[CONFIGURATION.SiteDisabled]);

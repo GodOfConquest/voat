@@ -115,6 +115,15 @@ namespace Voat.Configuration
                 return (string)configValues[CONFIGURATION.RecaptchaPublicKey];
             }
         }
+
+        public static string EmailServiceKey
+        {
+            get
+            {
+                return (string)configValues[CONFIGURATION.EmailServiceKey];
+            }
+        }
+
         public static string SiteDescription
         {
             get
@@ -194,6 +203,22 @@ namespace Voat.Configuration
             get
             {
                 return (bool)configValues[CONFIGURATION.UseContentDeliveryNetwork];
+            }
+        }
+
+        public static string DestinationPathThumbs
+        {
+            get
+            {
+                return (string)configValues[CONFIGURATION.DestinationPathThumbs];
+            }
+        }
+
+        public static string DestinationPathAvatars
+        {
+            get
+            {
+                return (string)configValues[CONFIGURATION.DestinationPathAvatars];
             }
         }
         #endregion 
