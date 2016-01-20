@@ -122,7 +122,7 @@ namespace Voat.Controllers
             // check if subverse exists
             var targetSubverse = _db.Subverses.Find(submission.Subverse.Trim());
 
-            if (targetSubverse == null || submission.Subverse.Equals("all", StringComparison.OrdinalIgnoreCase))
+            if (targetSubverse == null || targetSubverse.Name.Equals("all", StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError(string.Empty, "Sorry, The subverse you are trying to post to does not exist.");
                 return View("Submit");
@@ -254,7 +254,7 @@ namespace Voat.Controllers
             }
 
             // show saved                        
-            if (whattodisplay != null && whattodisplay == "saved" && User.Identity.IsAuthenticated && User.Identity.Name == id)
+            if (whattodisplay != null && whattodisplay == "saved" && User.Identity.IsAuthenticated && User.Identity.Name.Equals(id, StringComparison.OrdinalIgnoreCase))
             {
                 IQueryable<SavedItem> savedSubmissions = (from m in _db.Submissions
                                                           join s in _db.SubmissionSaveTrackers on m.ID equals s.SubmissionID
@@ -306,7 +306,7 @@ namespace Voat.Controllers
             {
                 // show only submissions from subverses that user is subscribed to if user is logged in
                 // also do a check so that user actually has subscriptions
-                if (User.Identity.IsAuthenticated && UserHelper.SubscriptionCount(User.Identity.Name) > 0)
+                if (User.Identity.IsAuthenticated && UserHelper.SubscriptionCount(User.Identity.Name) > 0 && Request.QueryString["frontpage"] != "guest")
                 {
                     //IAmAGate: Perf mods for caching
                     int pagesToTake = 2;
@@ -354,31 +354,7 @@ namespace Voat.Controllers
                 }
                 else
                 {
-                    //IAmAGate: Perf mods for caching
-                    string cacheKey = String.Format("front.guest.page.{0}.sort.rank", pageNumber);
-                    object cacheData = CacheHandler.Retrieve(cacheKey);
-                    if (cacheData == null)
-                    {
-
-                        var getDataFunc = new Func<object>(() =>
-                        {
-                            using (voatEntities db = new voatEntities(CONSTANTS.CONNECTION_READONLY))
-                            {
-
-                                // get only submissions from default subverses, order by rank
-                                IQueryable<Submission> submissions = (from message in db.Submissions.AsNoTracking()
-                                                                   where !message.IsArchived && !message.IsDeleted
-                                                                   where !(from bu in db.BannedUsers select bu.UserName).Contains(message.UserName)
-                                                                   join defaultsubverse in db.DefaultSubverses on message.Subverse equals defaultsubverse.Subverse
-                                                                   select message).OrderByDescending(s => s.Rank);
-
-                                return submissions.Where(s => s.StickiedSubmission.SubmissionID != s.ID).Skip(pageNumber * pageSize).Take(pageSize).ToList();
-
-                            }
-                        });
-                        //Now with it's own locking!
-                        cacheData = CacheHandler.Register(cacheKey, getDataFunc, TimeSpan.FromMinutes(CONSTANTS.DEFAULT_GUEST_PAGE_CACHE_MINUTES), (pageNumber < 3 ? 0 : 3));
-                    }
+                     IList<Submission> cacheData = GetGuestFrontPage(pageSize, pageNumber);
 
                     PaginatedList<Submission> paginatedSubmissions = new PaginatedList<Submission>((IList<Submission>)cacheData, pageNumber, pageSize, 50000);
 
@@ -389,6 +365,38 @@ namespace Voat.Controllers
             {
                 return View("~/Views/Errors/DbNotResponding.cshtml");
             }
+        }
+
+        public static IList<Submission> GetGuestFrontPage(int pageSize, int pageNumber)
+        {
+            //IAmAGate: Perf mods for caching
+            string cacheKey = String.Format("front.guest.page.{0}.sort.rank", pageNumber);
+            IList<Submission> cacheData = CacheHandler.Retrieve<IList<Submission>>(cacheKey);
+            if (cacheData == null)
+            {
+
+                var getDataFunc = new Func<IList<Submission>>(() =>
+                {
+                    using (voatEntities db = new voatEntities(CONSTANTS.CONNECTION_READONLY))
+                    {
+                        // get only submissions from default subverses not older than 24 hours, order by relative rank
+                        var startDate = DateTime.Now.Add(new TimeSpan(0, -24, 0, 0, 0));
+
+                        IQueryable<Submission> submissions = (from message in db.Submissions.AsNoTracking()
+                                                              where !message.IsArchived && !message.IsDeleted && message.UpCount >= 3 && message.CreationDate >= startDate && message.CreationDate <= DateTime.Now
+                                                              where !(from bu in db.BannedUsers select bu.UserName).Contains(message.UserName)
+                                                              join defaultsubverse in db.DefaultSubverses on message.Subverse equals defaultsubverse.Subverse
+                                                              select message).OrderByDescending(s => s.RelativeRank);
+
+                        return submissions.Where(s => s.StickiedSubmission.SubmissionID != s.ID).Skip(pageNumber * pageSize).Take(pageSize).ToList();
+
+                    }
+                });
+                //Now with it's own locking!
+                cacheData = CacheHandler.Register(cacheKey, getDataFunc, TimeSpan.FromMinutes(CONSTANTS.DEFAULT_GUEST_PAGE_CACHE_MINUTES), (pageNumber < 3 ? 0 : 3));
+            }
+
+            return cacheData;
         }
 
         // GET: /v2
